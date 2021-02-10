@@ -641,16 +641,11 @@ function handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data)
         entryManager.exitScene();
       }
 
-      const scripts = hub.user_data?.scripts ?? [];
-      for (let script of scripts) {
-        try {
-          // "webpackIgnore" is needed so it knows these are external files
-          await import(/* webpackIgnore: true */ script);
-          console.log("Injected script", script);
-        } catch (error) {
-          console.error(`Problem loading custom script ${script}\nReason: ${error}`);
-        }
-      }
+      // Dynamically download scripts in parallel, but execute in sequence
+      const scriptsArr = hub.user_data?.scripts ?? [];
+      const moduleStr = scriptsArr.map(src => `import '${src}';`).join("\n");
+      const blob = new Blob([moduleStr], { type: "application/javascript" });
+      await import(/* webpackIgnore: true */ URL.createObjectURL(blob));
 
       const connectionErrorTimeout = setTimeout(onConnectionError, 90000);
       scene.components["networked-scene"]
