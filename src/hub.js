@@ -645,7 +645,11 @@ function handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data)
       const scriptsArr = hub.user_data?.scripts ?? [];
       const moduleStr = scriptsArr.map(src => `import '${src}';`).join("\n");
       const blob = new Blob([moduleStr], { type: "application/javascript" });
-      await import(/* webpackIgnore: true */ URL.createObjectURL(blob));
+      try {
+        await import(/* webpackIgnore: true */ URL.createObjectURL(blob));
+      } catch (err) {
+        console.error(`Custom scripts for this room failed to load. Reason: ${err}`);
+      }
 
       const connectionErrorTimeout = setTimeout(onConnectionError, 90000);
       scene.components["networked-scene"]
