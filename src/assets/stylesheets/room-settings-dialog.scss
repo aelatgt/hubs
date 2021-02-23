@@ -101,6 +101,58 @@
   }
 }
 
+:local(.script-container) {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin-bottom: 1em;
+  width: 100%;
+  
+  button {
+    margin: 0 1em;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  :local(.script-list) {
+    color: var(--panel-subtext-color);
+    font-weight: normal;
+    font-size: 0.9em;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    // Reverse %unselectable
+    -moz-user-select: text;
+    -webkit-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    
+    button {
+      color: var(--action-color, #FF3464);
+    }
+    li {
+      margin-bottom: 0.5em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  }
+  :local(.script-input-container) {
+    display: flex;
+    align-items: center;
+    input {
+      width: 100%;
+      margin: 0;
+    }
+    button {
+      font-weight: bold;
+    }
+  }
+}
+
 :local(.permission-disabled) {
   color: var(--panel-widget-disabled-color);
 }

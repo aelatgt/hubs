@@ -9,6 +9,9 @@ import styles from "../assets/stylesheets/room-settings-dialog.scss";
 import DialogContainer from "./dialog-container";
 import configs from "../utils/configs";
 
+import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 export default class RoomSettingsDialog extends Component {
   static propTypes = {
     initialSettings: PropTypes.object,
@@ -255,11 +258,87 @@ export default class RoomSettingsDialog extends Component {
             <div />
             {this.renderCheckbox("fly")}
           </div>
+          <span className={styles.subtitle}>Custom Scripts</span>
+          <CustomScripts
+            initialScripts={this.state.user_data?.scripts ?? []}
+            onChange={scripts => this.setState({ user_data: { scripts } })}
+          />
           <button type="submit" className={styles.nextButton}>
             <FormattedMessage id="room-settings.apply" />
           </button>
         </form>
       </DialogContainer>
+    );
+  }
+}
+
+class CustomScripts extends Component {
+  static propTypes = {
+    initialScripts: PropTypes.arrayOf(PropTypes.string),
+    onChange: PropTypes.func
+  };
+
+  constructor(props) {
+    super(props);
+    // Scripts is an array of URL strings
+    this.state = { scripts: props.initialScripts };
+  }
+
+  setScripts(scripts) {
+    this.setState({ scripts });
+    this.props.onChange(scripts);
+  }
+
+  onClickAdd(event) {
+    event.preventDefault();
+    const url = this.input.value;
+    if (url.length > 0) {
+      this.input.value = "";
+      const scripts = [...this.state.scripts, url];
+      this.setScripts(scripts);
+    }
+  }
+
+  onClickRemove(i) {
+    const scripts = [...this.state.scripts];
+    scripts.splice(i, 1);
+    this.setScripts(scripts);
+  }
+
+  render() {
+    return (
+      <div className={styles.scriptContainer}>
+        <div
+          className={styles.scriptInputContainer}
+          style={{ marginBottom: this.state.scripts.length > 0 ? "1em" : 0 }}
+        >
+          <input
+            name="url"
+            type="text"
+            autoComplete="off"
+            placeholder="Script URL"
+            onFocus={e => handleTextFieldFocus(e.target)}
+            onBlur={() => handleTextFieldBlur()}
+            className={styles.nameField}
+            ref={node => (this.input = node)}
+          />
+          <button aria-label="Add custom script entry" onClick={e => this.onClickAdd(e)}>
+            add
+          </button>
+        </div>
+        <ul className={styles.scriptList}>
+          {this.state.scripts.map((url, i) => (
+            <li key={i}>
+              <button type="button" aria-label="Delete custom script entry" onClick={e => this.onClickRemove(i)}>
+                <i>
+                  <FontAwesomeIcon icon={faTimes} />
+                </i>
+              </button>
+              <span>{url}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     );
   }
 }
