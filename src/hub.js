@@ -642,12 +642,7 @@ function handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data)
       adapter.unreliableTransport = sendViaPhoenix(false);
     });
     const loadEnvironmentAndConnect = async () => {
-      updateEnvironmentForHub(hub, entryManager);
-      function onConnectionError() {
-        console.error("Unknown error occurred while attempting to connect to networked scene.");
-        remountUI({ roomUnavailableReason: "connect_error" });
-        entryManager.exitScene();
-      }
+      // START custom scripts injection
 
       // Dynamically download scripts in parallel, but execute in sequence
       const scriptsArr = hub.user_data?.scripts ?? [];
@@ -657,6 +652,15 @@ function handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data)
         await import(/* webpackIgnore: true */ URL.createObjectURL(blob));
       } catch (err) {
         console.error(`Custom scripts for this room failed to load. Reason: ${err}`);
+      }
+
+      // END custom scripts injection
+
+      updateEnvironmentForHub(hub, entryManager);
+      function onConnectionError() {
+        console.error("Unknown error occurred while attempting to connect to networked scene.");
+        remountUI({ roomUnavailableReason: "connect_error" });
+        entryManager.exitScene();
       }
 
       const connectionErrorTimeout = setTimeout(onConnectionError, 90000);
