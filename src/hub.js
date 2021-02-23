@@ -1644,8 +1644,13 @@ Like ES6 dynamic import() but for multiple modules.
 Modules are downloaded in parallel and executed in sequence
 */
 function importAll(urls) {
-  const moduleStr = urls.map(url => `import '${url}';`).join("\n");
-  const blob = new Blob([moduleStr], { type: "application/javascript" });
-  const promise = import(/* webpackIgnore: true */ URL.createObjectURL(blob));
-  return promise;
+  if (urls?.length > 0) {
+    const moduleStr = urls.map(url => `import '${url}';`).join("\n");
+    const blob = new Blob([moduleStr], { type: "application/javascript" });
+    const promise = import(/* webpackIgnore: true */ URL.createObjectURL(blob));
+    return promise;
+  } else {
+    // If no urls were received, don't bother making a Blob
+    return Promise.resolve();
+  }
 }
