@@ -1508,9 +1508,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       await presenceSync.promise;
 
       try {
-        // If scriptsPromise is null (i.e. we rejoined) then this is a no-op
         await scriptsPromise;
       } catch (err) {
+        // Error may arise if URL to a script is broken, we don't want to block scene loading
         console.error(`Custom scripts for this room failed to load. Reason: ${err}`);
       }
 
