@@ -649,16 +649,6 @@ function handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data)
         entryManager.exitScene();
       }
 
-      // Dynamically download scripts in parallel, but execute in sequence
-      const scriptsArr = hub.user_data?.scripts ?? [];
-      const moduleStr = scriptsArr.map(src => `import '${src}';`).join("\n");
-      const blob = new Blob([moduleStr], { type: "application/javascript" });
-      try {
-        await import(/* webpackIgnore: true */ URL.createObjectURL(blob));
-      } catch (err) {
-        console.error(`Custom scripts for this room failed to load. Reason: ${err}`);
-      }
-
       const connectionErrorTimeout = setTimeout(onConnectionError, 90000);
       scene.components["networked-scene"]
         .connect()
@@ -1288,6 +1278,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     resolve: null
   };
 
+  let scriptsPromise = null;
+
   hubChannel.setPhoenixChannel(hubPhxChannel);
 
   hubPhxChannel
@@ -1303,6 +1295,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (isInitialJoin) {
+        // Start loading scripts now, we'll wait for this to finish later before finishing joining
+        const scriptsArr = data.hubs[0].user_data?.scripts ?? [];
+        scriptsPromise = importAll(scriptsArr);
+
         store.addEventListener("profilechanged", hubChannel.sendProfileUpdate.bind(hubChannel));
 
         const requestedOccupants = [];
@@ -1511,6 +1507,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       await presenceSync.promise;
 
+      try {
+        await scriptsPromise;
+      } catch (err) {
+        // Error may arise if URL to a script is broken, we don't want to block scene loading
+        console.error(`Custom scripts for this room failed to load. Reason: ${err}`);
+      }
+
       handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data);
     })
     .receive("error", res => {
@@ -1635,3 +1638,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   authChannel.setSocket(socket);
   linkChannel.setSocket(socket);
 });
+
+/*
+Like ES6 dynamic import() but for multiple modules.
+Modules are downloaded in parallel and executed in sequence
+*/
+function importAll(urls) {
+  if (urls?.length > 0) {
+    const moduleStr = urls.map(url => `import '${url}';`).join("\n");
+    const blob = new Blob([moduleStr], { type: "application/javascript" });
+    const promise = import(/* webpackIgnore: true */ URL.createObjectURL(blob));
+    return promise;
+  } else {
+    // If no urls were received, don't bother making a Blob
+    return Promise.resolve();
+  }
+}
