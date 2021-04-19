@@ -48,6 +48,8 @@ function useSignIn() {
     },
     [auth]
   );
+    // Expose the login method for the SSO scripts (if they are loaded)
+    window.submitEmail = submitEmail;
 
   const cancel = useCallback(() => {
     dispatch({ type: SignInAction.cancel });
