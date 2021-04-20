@@ -36,7 +36,17 @@ if (process.env.APP_CONFIG) {
 
 if (configs.ENABLE_SSO) {
   window.HUBS_SSO = {}
-  window.HUBS_SSO.SSO_SERVER_PATH = process.env.SSO_SERVER_PATH
+  window.HUBS_SSO.SSO_SERVER_PATH = process.env.SSO_SERVER_PATH || configs.ENABLE_SSO;
+  if (window.HUBS_SSO.SSO_SERVER_PATH) {
+    try {
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = window.HUBS_SSO.SSO_SERVER_PATH
+      document.body.appendChild.appendChild(script);
+    } catch {
+      console.error("Unable to load SSO scripts")
+    }
+  }
 }
 
 if (window.APP_CONFIG) {
