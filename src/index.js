@@ -10,6 +10,8 @@ import { AuthContextProvider } from "./react-components/auth/AuthContext";
 
 registerTelemetry("/home", "Hubs Home Page");
 
+
+
 const store = new Store();
 window.APP = { store };
 

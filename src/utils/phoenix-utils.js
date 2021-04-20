@@ -123,7 +123,9 @@ export async function connectToReticulum(debug = false, params = null, socketCla
 
   const socket = new socketClass(`${socketUrl}/socket`, socketSettings);
   const socketKey = `${socketUrl}/socket`.replace(":", "_").replace(".", "_", ).replace("//", "").replace("/", "_").replace(".", "").replace("-", "");
-  window[socketKey] = socket;
+  if (window.HUBS_SSO) {
+    window.HUBS_SSO[socketKey] = socket;
+  }
   socket.connect();
   socket.onError(async () => {
     // On error, underlying reticulum node may have died, so rebalance by

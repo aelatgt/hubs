@@ -29,9 +29,14 @@ let isAdmin = false;
 // Also include configs that reticulum injects as a script in the page head.
 
 configs.AVAILABLE_INTEGRATIONS = window.AVAILABLE_INTEGRATIONS || {};
-
+configs.ENABLE_SSO = process.env.SSO_SCRIPT_PATH 
 if (process.env.APP_CONFIG) {
   window.APP_CONFIG = process.env.APP_CONFIG;
+}
+
+if (configs.ENABLE_SSO) {
+  window.HUBS_SSO = {}
+  window.HUBS_SSO.SSO_SERVER_PATH = process.env.SSO_SERVER_PATH
 }
 
 if (window.APP_CONFIG) {
