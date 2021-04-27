@@ -15,6 +15,8 @@ registerTelemetry("/home", "Hubs Home Page");
 const store = new Store();
 window.APP = { store };
 
+
+
 function Root() {
   return (
     <WrappedIntlProvider>

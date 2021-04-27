@@ -29,29 +29,16 @@ let isAdmin = false;
 // Also include configs that reticulum injects as a script in the page head.
 
 configs.AVAILABLE_INTEGRATIONS = window.AVAILABLE_INTEGRATIONS || {};
-configs.ENABLE_SSO = process.env.SSO_SCRIPT_PATH 
+configs.ENABLE_SSO = process.env.SSO_SCRIPT_PATH || "http://localhost:3000/sso/bundle.js"
 if (process.env.APP_CONFIG) {
   window.APP_CONFIG = process.env.APP_CONFIG;
 }
 
-if (configs.ENABLE_SSO) {
-  window.HUBS_SSO = {}
-  window.HUBS_SSO.SSO_SERVER_PATH = process.env.SSO_SERVER_PATH || configs.ENABLE_SSO;
-  if (window.HUBS_SSO.SSO_SERVER_PATH) {
-    try {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = window.HUBS_SSO.SSO_SERVER_PATH
-      document.body.appendChild.appendChild(script);
-    } catch {
-      console.error("Unable to load SSO scripts")
-    }
-  }
-}
-
 if (window.APP_CONFIG) {
   configs.APP_CONFIG = window.APP_CONFIG;
-  const { theme } = configs.APP_CONFIG;
+  const {
+    theme
+  } = configs.APP_CONFIG;
   if (theme) {
     const colorVars = [];
     for (const key in theme) {
@@ -65,6 +52,21 @@ if (window.APP_CONFIG) {
 
   if (!configs.APP_CONFIG.features) {
     configs.APP_CONFIG.features = {};
+  }
+  console.log("ENABLE_SSO", configs.ENABLE_SSO)
+  if (configs.ENABLE_SSO) {
+    configs.HUBS_SSO = {}
+    configs.HUBS_SSO.SSO_SERVER_PATH = process.env.SSO_SERVER_PATH || configs.ENABLE_SSO;
+    if (configs.HUBS_SSO.SSO_SERVER_PATH) {
+      try {
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = configs.HUBS_SSO.SSO_SERVER_PATH
+        document.body.appendChild.appendChild(script);
+      } catch {
+        console.error("Unable to load SSO scripts")
+      }
+    }
   }
 } else {
   configs.APP_CONFIG = {
