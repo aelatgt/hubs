@@ -36,7 +36,7 @@ import {
 
 import nextTick from "./utils/next-tick";
 import { addAnimationComponents } from "./utils/animation";
-import { authorizeOrSanitizeMessage } from "./utils/permissions-utils";
+import { authorizeOrSanitizeMessage, applyPersistentSync } from "./utils/permissions-utils";
 import Cookies from "js-cookie";
 import "./naf-dialog-adapter";
 
@@ -175,6 +175,8 @@ window.APP.RENDER_ORDER = {
   HUD_ICONS: 2,
   CURSOR: 3
 };
+window.APP.utils = { applyPersistentSync };
+
 const store = window.APP.store;
 store.update({ preferences: { shouldPromptForRefresh: undefined } }); // Clear flag that prompts for refresh from preference screen
 const mediaSearchStore = window.APP.mediaSearchStore;
@@ -1255,6 +1257,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     resolve: null
   };
 
+  let scriptPromise = null;
+
   hubChannel.setPhoenixChannel(hubPhxChannel);
 
   hubPhxChannel
@@ -1270,6 +1274,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (isInitialJoin) {
+        const scriptURL = data.hubs[0].user_data?.script_url;
+        const scriptsArr = data.hubs[0].user_data?.scripts ?? []; // legacy
+        if (scriptURL) {
+          scriptPromise = import(/* webpackIgnore: true */ scriptURL);
+        } else if (scriptsArr.length > 0) {
+          console.warn(
+            "Warning: legacy scripts array found",
+            scriptsArr,
+            "Please update the room script to remove this warning"
+          );
+          scriptPromise = importAll(scriptsArr);
+        }
+
         store.addEventListener("profilechanged", hubChannel.sendProfileUpdate.bind(hubChannel));
 
         const requestedOccupants = [];
@@ -1475,6 +1492,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       await presenceSync.promise;
 
+      try {
+        await scriptPromise;
+      } catch (err) {
+        console.error(`Custom script for this room failed to load. Reason: ${err}`);
+      }
+
       handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data);
     })
     .receive("error", res => {
@@ -1606,3 +1629,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   authChannel.setSocket(socket);
   linkChannel.setSocket(socket);
 });
+
+/*
+Like ES6 dynamic import() but for multiple modules.
+Modules are downloaded in parallel and executed in sequence
+*/
+function importAll(urls) {
+  if (urls?.length > 0) {
+    const moduleStr = urls.map(url => `import '${url}';`).join("\n");
+    const blob = new Blob([moduleStr], { type: "application/javascript" });
+    const promise = import(/* webpackIgnore: true */ URL.createObjectURL(blob));
+    return promise;
+  } else {
+    // If no urls were received, don't bother making a Blob
+    return Promise.resolve();
+  }
+}

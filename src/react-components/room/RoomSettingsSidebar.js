@@ -197,6 +197,15 @@ export function RoomSettingsSidebar({
             />
           </div>
         </InputField>
+        <TextInputField
+          name="user_data.script_url"
+          type="text"
+          autoComplete="off"
+          label="Custom Script"
+          placeholder="Script URL"
+          ref={register}
+          fullWidth
+        />
         <ApplyButton type="submit" />
       </Column>
     </Sidebar>
